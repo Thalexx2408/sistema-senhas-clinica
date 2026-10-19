@@ -15,7 +15,9 @@ class FilaEspecialidade:
         self.nome = nome
         self.id_esp = id_esp
         self.fila_normal = deque()
+        self.fila_prioridade = []
         self.contador_normal = 1
+        self.contador_prioridade = 1
         self.ordem_global = 1
         self.pacientes_ativos = {}
 
@@ -26,3 +28,22 @@ class FilaEspecialidade:
         self.contador_normal += 1
         self.ordem_global += 1
         return pac.senha
+
+    def adicionar_prioridade(self, categoria):
+        pac = Paciente(self.id_esp, 'P', categoria, self.contador_prioridade, self.ordem_global)
+        heapq.heappush(self.fila_prioridade, (categoria, self.ordem_global, pac))
+        self.pacientes_ativos[pac.senha] = pac
+        self.contador_prioridade += 1
+        self.ordem_global += 1
+        return pac.senha
+
+    def chamar_proximo(self):
+        if self.fila_prioridade:
+            _, _, pac = heapq.heappop(self.fila_prioridade)
+            del self.pacientes_ativos[pac.senha]
+            return pac
+        elif self.fila_normal:
+            pac = self.fila_normal.popleft()
+            del self.pacientes_ativos[pac.senha]
+            return pac
+        return None
