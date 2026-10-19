@@ -150,10 +150,15 @@ class TelaCadastro(tk.Frame):
 
     def cadastrar(self):
         nome = self.combo_esp.get()
-        if not nome: return messagebox.showwarning("Aviso", "Selecione uma especialidade.")
-        if len(self.controller.clinicas) >= 3: return messagebox.showerror("Erro", "Limite máximo de 3 atingido!")
+        if not nome:
+            messagebox.showwarning("Aviso", "Selecione uma especialidade.")
+            return
+        if len(self.controller.clinicas) >= 3:
+            messagebox.showerror("Erro", "Limite máximo de 3 atingido!")
+            return
         if any(fila.nome == nome for fila in self.controller.clinicas.values()):
-            return messagebox.showerror("Erro", "Especialidade já cadastrada!")
+            messagebox.showerror("Erro", "Especialidade já cadastrada!")
+            return
             
         id_esp = f"C{self.controller.contador_ids}"
         self.controller.clinicas[id_esp] = FilaEspecialidade(nome, id_esp)
@@ -163,7 +168,8 @@ class TelaCadastro(tk.Frame):
 
     def atualizar(self):
         texto = "Especialidades Cadastradas:\n\n"
-        for id_esp, fila in self.controller.clinicas.items(): texto += f"{id_esp} — {fila.nome}\n"
+        for id_esp, fila in self.controller.clinicas.items():
+            texto += f"{id_esp} — {fila.nome}\n"
         self.lista_label.config(text=texto)
 
 class TelaEmissao(tk.Frame):
@@ -188,7 +194,8 @@ class TelaEmissao(tk.Frame):
         self.lbl_senha.pack(pady=20)
 
     def toggle_prioridade(self):
-        if self.tipo_var.get() == "P": self.combo_prioridade.configure(state="readonly")
+        if self.tipo_var.get() == "P":
+            self.combo_prioridade.configure(state="readonly")
         else:
             self.combo_prioridade.set("")
             self.combo_prioridade.configure(state="disabled")
@@ -198,15 +205,20 @@ class TelaEmissao(tk.Frame):
 
     def emitir(self):
         sel_esp = self.combo_esp.get()
-        if not sel_esp: return messagebox.showwarning("Aviso", "Selecione a especialidade.")
+        if not sel_esp:
+            messagebox.showwarning("Aviso", "Selecione a especialidade.")
+            return
         
         id_esp = sel_esp.split(" - ")[0]
         fila = self.controller.clinicas[id_esp]
         
-        if self.tipo_var.get() == "N": senha = fila.adicionar_normal()
+        if self.tipo_var.get() == "N":
+            senha = fila.adicionar_normal()
         else:
             cat_str = self.combo_prioridade.get()
-            if not cat_str: return messagebox.showwarning("Aviso", "Selecione a categoria de prioridade.")
+            if not cat_str:
+                messagebox.showwarning("Aviso", "Selecione a categoria de prioridade.")
+                return
             senha = fila.adicionar_prioridade(self.controller.categorias_prioridade[cat_str])
             
         self.lbl_senha.config(text=f"SENHA: {senha}")
@@ -244,18 +256,80 @@ class TelaGerenciamento(tk.Frame):
         
         temp_heap = fila.fila_prioridade.copy()
         temp_heap.sort()
-        for _, _, pac in temp_heap: texto += f"- {pac.senha} (Prioridade)\n"
-        for pac in fila.fila_normal: texto += f"- {pac.senha} (Normal)\n"
+        for _, _, pac in temp_heap:
+            texto += f"- {pac.senha} (Prioridade)\n"
+        for pac in fila.fila_normal:
+            texto += f"- {pac.senha} (Normal)\n"
             
         self.txt_filas.insert(tk.END, texto)
         self.txt_filas.config(state="disabled")
 
     def chamar(self):
         sel_esp = self.combo_esp.get()
-        if not sel_esp: return messagebox.showwarning("Aviso", "Selecione uma especialidade.")
+        if not sel_esp:
+            messagebox.showwarning("Aviso", "Selecione uma especialidade.")
+            return
         
         fila = self.controller.clinicas[sel_esp.split(" - ")[0]]
         pac = fila.chamar_proximo()
         if pac:
             self.controller.ultima_chamada = {"senha": pac.senha, "especialidade": fila.nome, "tipo": "Prioritário" if pac.tipo == 'P' else "Normal"}
-            messagebox.showinfo("Chamada", f"Paciente {pac.senha} chamado
+            messagebox.showinfo("Chamada", f"Paciente {pac.senha} chamado!")
+            self.atualizar_lista()
+        else:
+            messagebox.showinfo("Aviso", "A fila está vazia.")
+
+class TelaPainel(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        tk.Label(self, text="Painel de Atendimento", font=("Arial", 16, "bold")).pack(pady=20)
+        self.lbl_senha = tk.Label(self, text="", font=("Arial", 40, "bold"), fg="red")
+        self.lbl_senha.pack(pady=10)
+        self.lbl_esp = tk.Label(self, text="", font=("Arial", 18))
+        self.lbl_esp.pack(pady=5)
+        self.lbl_tipo = tk.Label(self, text="", font=("Arial", 14))
+        self.lbl_tipo.pack(pady=5)
+        self.lbl_espera = tk.Label(self, text="", font=("Arial", 12))
+        self.lbl_espera.pack(pady=20)
+
+    def atualizar(self):
+        u = self.controller.ultima_chamada
+        self.lbl_senha.config(text=u["senha"])
+        self.lbl_esp.config(text=f"Especialidade: {u['especialidade']}")
+        self.lbl_tipo.config(text=f"Atendimento: {u['tipo']}")
+        total = sum(len(f.fila_prioridade) + len(f.fila_normal) for f in self.controller.clinicas.values())
+        self.lbl_espera.config(text=f"Total de pacientes aguardando na clínica: {total}")
+
+class TelaTempo(tk.Frame):
+    def __init__(self, parent, controller):
+        super().__init__(parent)
+        self.controller = controller
+        tk.Label(self, text="Consultar Tempo de Espera", font=("Arial", 16, "bold")).pack(pady=20)
+        tk.Label(self, text="Digite sua senha (ex: C1-N001):").pack(pady=5)
+        self.ent_senha = tk.Entry(self, font=("Arial", 14))
+        self.ent_senha.pack(pady=5)
+        tk.Button(self, text="Consultar", command=self.consultar).pack(pady=10)
+        self.lbl_resultado = tk.Label(self, text="", font=("Arial", 14), fg="blue")
+        self.lbl_resultado.pack(pady=20)
+
+    def consultar(self):
+        senha = self.ent_senha.get().strip().upper()
+        if not senha or "-" not in senha:
+            messagebox.showerror("Erro", "Use Ex: C1-N001")
+            return
+            
+        id_esp = senha.split("-")[0]
+        if id_esp not in self.controller.clinicas:
+            self.lbl_resultado.config(text="Especialidade não encontrada.")
+            return
+            
+        tempo = self.controller.clinicas[id_esp].estimar_tempo(senha)
+        if tempo == -1:
+            self.lbl_resultado.config(text="Senha não encontrada ou já atendida.")
+        else:
+            self.lbl_resultado.config(text=f"Pessoas à frente: {tempo // 30}\nTempo estimado: {tempo} minutos.")
+
+if __name__ == "__main__":
+    app = ClinicaApp()
+    app.mainloop()
