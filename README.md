@@ -3,7 +3,7 @@
 **Disciplina:** Estrutura de Dados II  
 **Curso:** Tecnologia da Informação  
 **Professora:** Profa. Karla Sartin  
-**Integrantes:** [Seu Nome], [Nome 2], [Nome 3]  
+**Integrantes:** Thales Firmino Evaristo Lopes
 
 ## 1. Situação-Problema
 A clínica médica enfrentava dificuldades com o controle manual das filas de atendimento. Isso dificultava o controle da ordem de chegada, a gestão das regras legais de prioridade e o cálculo do tempo de espera. Para solucionar o problema, foi desenvolvido este sistema para automatizar a emissão e chamada de senhas.
@@ -33,4 +33,4 @@ Automatizar o gerenciamento de filas da clínica por meio de uma interface gráf
 3. Execute o arquivo principal via terminal: `python main.py`
 
 ## 7. Vídeo Demonstrativo
-* **Link:** [Coloque o link do YouTube ou Drive aqui após gravarem]
+* **Link:** (https://youtu.be/sEMiDF90kdQ)
